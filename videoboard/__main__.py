@@ -5,6 +5,7 @@ import mimetypes
 import argparse
 import json
 import http.server
+import urllib
 from pathlib import Path
 from collections import defaultdict
 
@@ -92,7 +93,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         and must be closed by the caller under all circumstances), or
         None, in which case the caller has nothing further to do.
         """
-        path = os.getcwd() + self.path
+        path = urllib.parse.unquote(os.getcwd() + self.path)
         f = None
         ctype = self.extensions_map['']
         try:
