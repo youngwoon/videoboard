@@ -136,8 +136,11 @@ def main():
 
     args = parser.parse_args()
 
+    # Change directory to prevent access to directories other than logdir
+    os.chdir(args.logdir)
+
     class RequestHandlerWithArgs(RequestHandler):
-        _logdir = args.logdir
+        _logdir = '.'
         _max_height = args.height
         _max_width = args.width
         _max_file_name_length = args.file_name_length
