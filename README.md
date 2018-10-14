@@ -2,14 +2,16 @@
 
 Simple http server for visualizing videos and images.
 
-Videoboard launches a simple http server which recursively searches directories and shows all videos and images grouped by directory.
+Videoboard launches a simple http server which recursively searches directories and shows all videos and images grouped by directory.<br>
 It supports videos and images with extensions `mp4`, `png`, `jpg`, `jpeg`, and `gif`.
 
-> This repo is initiated to check training and testing results for Reinforcement Learning research.
-> Using Python's SimpleHTTPServer requires me to navigate forward and backward. It is especially annoying when multiple experiments are running.
+![Screenshot: videoboard](screenshot.png)
+
+> This repo is initiated to check training and testing results for Reinforcement Learning research. <br>
+> Using Python's SimpleHTTPServer requires me to navigate forward and backward. <br>
+> It is especially annoying when multiple experiments are running. <br>
 > Videoboard makes visualizing videos from multiple directories much easier.
 
-![Screenshot: videoboard](screenshot.png)
 
 ## Usage
 
