@@ -46,7 +46,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
             # Retrieve video and image files recursively
-            items = self._get_item_list(Path(self._logdir), recursive=True)
+            items = self._get_item_list(Path(self._logdir), recursive=self._recursive)
 
             # Group files based on the parent dirs
             item_names = defaultdict(list)
@@ -65,6 +65,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                                           'max-width: {}px;'.format(self._max_width))
             script_html = script.replace('max_length = 30',
                                          'max_length = {}'.format(self._max_file_name_length))
+            if not self._display:
+                script_html = script_html.replace('+ itemHTML', '+ ""')
 
             html = ['<!DOCTYPE html>', '<html>', head_html, '<body>']
             for dir_name in sorted(item_names.keys()):
@@ -119,9 +121,14 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     extensions_map.update({'': 'application/octet-stream'})
 
 
+def str2bool(v):
+    return v.lower() == 'true'
+
 def main():
-    parser = argparse.ArgumentParser("Videoboard: a simple http server for visualizing videos and images",
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        prog='videoboard',
+        description='A simple http server for visualizing videos and images',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--port', type=int, default=8000,
                         help='port number.')
     parser.add_argument('--logdir', type=str, default='.',
@@ -133,6 +140,12 @@ def main():
                         help='maximum width of image/video.')
     parser.add_argument('--file_name_length', type=int, default=30,
                         help='maximum length of file name.')
+    parser.add_argument('--recursive', type=str2bool, default=True,
+                        choices=[True, False],
+                        help='search files recursively.')
+    parser.add_argument('--display', type=str2bool, default=True,
+                        choices=[True, False],
+                        help='display videos and images.')
 
     args = parser.parse_args()
 
@@ -144,6 +157,8 @@ def main():
         _max_height = args.height
         _max_width = args.width
         _max_file_name_length = args.file_name_length
+        _recursive = args.recursive
+        _display = args.display
 
     server = http.server.HTTPServer(('', args.port), RequestHandlerWithArgs)
 
