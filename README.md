@@ -37,11 +37,18 @@ Whenever click a directory, videos and images inside will be reloaded.
 
 ## Installation
 
+Install from pip:
+```
+pip install videoboard
+```
+
+Install from the latest version:
 ```
 git clone https://github.com/youngwoon/videoboard.git
 cd videoboard
 pip install -e .
 ```
+
 
 ## License
 
