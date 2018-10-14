@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 import re
 
@@ -37,7 +37,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
     ],
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     install_requires=[],
     python_requires='>=3',
     entry_points={
