@@ -83,13 +83,12 @@ for (var i = 0; i < accordions.length; i++) {
             panel.style.display = "flex";
             var url = "";
             var message = this.innerHTML.split("\\n")[1];
-            var posting = $.post(url, message);
 
-            posting.done(function(data) {
-                var html_original = currentAcc.innerHTML;
-                var html_update = html_original.replace(/\\[[\\d*] items\\]$/im,
+            $.post(url, message).done(function(data) {
+                var htmlOld = currentAcc.innerHTML;
+                var htmlNew = htmlOld.replace(/\\[[\\d*] items\\]$/im,
                     "[" + data.length + " items]");
-                currentAcc.innerHTML = html_update;
+                currentAcc.innerHTML = htmlNew;
 
                 while (panel.firstChild) {
                     panel.removeChild(panel.firstChild);
@@ -109,9 +108,9 @@ for (var i = 0; i < accordions.length; i++) {
 
                     var fileName = data[j]["name"];
                     var fileNameLength = fileName.length;
-                    var max_length = 30;
-                    if (fileNameLength > max_length) {
-                        fileName = fileName.substring(0, max_length - 10) + "..." +
+                    var maxLength = 30;
+                    if (fileNameLength > maxLength) {
+                        fileName = fileName.substring(0, maxLength - 10) + "..." +
                             fileName.substring(fileNameLength - 7);
                     }
 
