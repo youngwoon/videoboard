@@ -23,6 +23,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         return items
 
     def do_POST(self):
+        """Serve a POST request."""
         data_string = self.rfile.read(int(self.headers.get('content-length')))
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
@@ -43,7 +44,14 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         return_string = json.dumps(return_info).encode('utf-8')
         self.wfile.write(return_string)
 
+    def do_HEAD(self):
+        """Serve a HEAD request."""
+        f = self.send_head()
+        if f:
+            f.close()
+
     def do_GET(self):
+        """Serve a GET request."""
         if self.path == '/':
             # Retrieve video and image files recursively
             items = self._get_item_list(Path(self._logdir), recursive=self._recursive)
@@ -81,13 +89,24 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write('\n'.join(html).encode())
         else:
             # Send a raw file (video or image)
-            f = self._send_head()
+            f = self.send_head()
             if f:
-                shutil.copyfileobj(f, self.wfile)
+                if self._range:
+                    s, e = self._range
+                    buf_size = 64 * 1024
+                    f.seek(s)
+                    while True:
+                        to_read = min(buf_size, e - f.tell() + 1)
+                        buf = f.read(to_read)
+                        if not buf: break
+                        self.wfile.write(buf)
+                else:
+                    shutil.copyfileobj(f, self.wfile)
                 f.close()
 
-    # Code from https://gist.github.com/UniIsland/3346170
-    def _send_head(self):
+    # Code from https://gist.github.com/UniIsland/3346170 and
+    # https://gist.github.com/shivakar/82ac5c9cb17c95500db1906600e5e1ea
+    def send_head(self):
         """Common code for GET and HEAD commands.
         This sends the response code and MIME headers.
         Return value is either a file object (which has to be copied
@@ -96,8 +115,12 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         None, in which case the caller has nothing further to do.
         """
         path = urllib.parse.unquote(os.getcwd() + self.path)
-        f = None
-        ctype = self.extensions_map['']
+        ext = ''
+        if '.' in path:
+            ext = '.' + path.rsplit('.')[-1].lower()
+            if ext not in self.extensions_map: ext = ''
+        ctype = self.extensions_map[ext]
+
         try:
             # Always read in binary mode. Opening files in text mode may cause
             # newline translations, making the actual size of the content
@@ -106,12 +129,49 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         except IOError:
             self.send_error(404, "File not found")
             return None
-        self.send_response(200)
-        self.send_header("Content-type", ctype)
+
         fs = os.fstat(f.fileno())
-        self.send_header("Content-Length", str(fs[6]))
+        file_size = content_size = fs[6]
+
+        # Support byte-range requests
+        is_range = 'Range' in self.headers
+        if is_range:
+            s, e = self.headers['Range'].strip().split('=')[1].split('-')
+            try:
+                if s == "":
+                    # bytes=-5 means [size-5:size]
+                    e = int(e)
+                    s = file_size - e
+                else:
+                    s = int(s)
+                    if e == "":
+                        e = file_size - 1
+                    else:
+                        e = int(e)
+            except ValueError as ex:
+                self.send_error(400, "Invalid range")
+                return None
+
+            if s >= file_size or e >= file_size or s > e:
+                self.send_error(400, "Invalid range")
+                return None
+            self._range = (s, e)
+            content_size = e - s + 1
+        else:
+            self._range = None
+
+        if is_range:
+            self.send_response(206)
+        else:
+            self.send_response(200)
+        self.send_header("Content-type", ctype)
+        if is_range:
+            self.send_header('Accept-Ranges', 'bytes')
+            self.send_header('Content-Range', 'bytes {}-{}/{}'.format(s, e, file_size))
+        self.send_header("Content-Length", str(content_size))
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
+
         return f
 
     # Initialize extension maps
