@@ -98,13 +98,15 @@ for (var i = 0; i < accordions.length; i++) {
                 for (var j = 0; j < data.length; j++) {
                     var newItem = document.createElement('div');
                     var ext = data[j]["path"].split('.').pop();
+                    itemHTML = "<a  href=\\"" + data[j]["path"] + "\\">";
                     if (ext == "mp4") {
-                        itemHTML = "<video src=\\"" + data[j]["path"] +
+                        itemHTML += "<video src=\\"" + data[j]["path"] +
                             "\\" controls type=\\"video/mp4\\"></video>";
                     } else {
-                        itemHTML = "<img src=\\"" + data[j]["path"] +
+                        itemHTML += "<img src=\\"" + data[j]["path"] +
                             "\\"></img>";
                     }
+                    itemHTML += "</a>";
 
                     var fileName = data[j]["name"];
                     var fileNameLength = fileName.length;
