@@ -59,12 +59,11 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             # Group files based on the parent dirs
             item_names = defaultdict(list)
             for item_path in items:
-                if len(item_path.rsplit('/', 1)) > 1:
-                    dir_name, item_name = item_path.rsplit('/', 1)
-                else:
-                    dir_name = ''
-                    item_name = item_path
-                item_names[dir_name].append((item_path, item_name))
+              dir_name, item_name = os.path.split(item_path)
+              if dir_name:
+                  item_names[dir_name].append((item_path, item_name))
+              else:
+                  item_names[''].append((item_path, item_name))
 
             # Build a html file
             head_html = header.replace('max-height: 320px;',
